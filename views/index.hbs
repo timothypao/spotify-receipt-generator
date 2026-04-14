@@ -1,0 +1,23 @@
+<main class="landing-page">
+  <section class="landing-card landing-minimal">
+    <img
+      class="spotify-logo"
+      src="/images/spotify-logo.svg"
+      alt="Spotify logo"
+      width="84"
+      height="84"
+    >
+    <p class="eyebrow">RECEIPTIFY CLONE</p>
+    <h1>Your Spotify listening history, printed like a receipt.</h1>
+    <p class="landing-copy">
+      Connect your Spotify account and generate a thermal-style receipt of your top tracks
+      from the last month, last 6 months, or all time.
+    </p>
+
+    {{#if errorMessage}}
+      <p class="status-message">{{errorMessage}}</p>
+    {{/if}}
+
+    <a class="login-button" href="/login">Log in with Spotify</a>
+  </section>
+</main>

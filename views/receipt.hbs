@@ -1,0 +1,133 @@
+<a class="logout-link-fixed" href="/logout">LOGOUT</a>
+
+<main class="receipt-page">
+  <div class="receipt-shell">
+    <header class="toolbar">
+      <nav class="range-tabs" aria-label="Time ranges">
+        <a class="range-tab {{#if (eq range 'short_term')}}is-active{{/if}}" href="/receipt?range=short_term&length={{length}}&font={{font}}">LAST MONTH</a>
+        <a class="range-tab {{#if (eq range 'medium_term')}}is-active{{/if}}" href="/receipt?range=medium_term&length={{length}}&font={{font}}">LAST 6 MONTHS</a>
+        <a class="range-tab {{#if (eq range 'long_term')}}is-active{{/if}}" href="/receipt?range=long_term&length={{length}}&font={{font}}">ALL TIME</a>
+      </nav>
+    </header>
+
+    <section class="controls-panel" aria-label="Receipt customization">
+      <div class="control-group">
+        <span class="control-label">LENGTH</span>
+        <div class="toggle-row">
+          <a class="toggle-pill {{#if (eq length '10')}}is-active{{/if}}" href="/receipt?range={{range}}&length=10&font={{font}}">TOP 10</a>
+          <a class="toggle-pill {{#if (eq length '25')}}is-active{{/if}}" href="/receipt?range={{range}}&length=25&font={{font}}">TOP 25</a>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="control-label">FONT</span>
+        <div class="toggle-row">
+          <a class="toggle-pill {{#if (eq font 'classic')}}is-active{{/if}}" href="/receipt?range={{range}}&length={{length}}&font=classic">CLASSIC</a>
+          <a class="toggle-pill {{#if (eq font 'modern')}}is-active{{/if}}" href="/receipt?range={{range}}&length={{length}}&font=modern">MODERN</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="receipt-card receipt {{receiptFontClass}}" id="receiptCard" aria-label="Spotify top tracks receipt">
+      {{#if errorMessage}}
+        <div class="receipt-message">
+          <p>{{errorMessage}}</p>
+          <p>Please return to the home page and connect Spotify again.</p>
+          <a class="inline-link" href="/">Back to home</a>
+        </div>
+      {{else}}
+        <div class="receipt-brand">
+          <div class="receipt-title">SPOTIFY RECEIPT</div>
+          <div class="receipt-subtitle">
+            {{#if (eq range 'short_term')}}LAST MONTH{{/if}}
+            {{#if (eq range 'medium_term')}}LAST 6 MONTHS{{/if}}
+            {{#if (eq range 'long_term')}}ALL TIME{{/if}}
+          </div>
+          <div class="receipt-divider">--------------------------------</div>
+        </div>
+
+        <div class="receipt-meta">
+          <p>FOR: {{user.display_name}}</p>
+          <p>GENERATED: {{generatedAt}}</p>
+        </div>
+
+        <div class="receipt-divider">--------------------------------</div>
+
+        <div class="track-row header-row">
+          <span class="track-index">QTY</span>
+          <span class="track-details">ITEM</span>
+          <span class="track-duration">AMT</span>
+        </div>
+
+        <ol class="track-list">
+          {{#each tracks as |track|}}
+            <li class="track-row">
+              <span class="track-index">{{track.num}}</span>
+              <span class="track-details">
+                <span class="track-name">{{track.name}}</span>
+                <span class="track-artist">{{track.artists}}</span>
+              </span>
+              <span class="track-duration">{{track.duration}}</span>
+            </li>
+          {{/each}}
+        </ol>
+
+        <div class="receipt-divider">--------------------------------</div>
+
+        <footer class="receipt-footer">
+          <div class="receipt-totals">
+            <span>ITEM COUNT: {{itemCount}}</span>
+            <span>TOTAL: {{totalDuration}}</span>
+          </div>
+          <p class="closing-line">KEEP THE GROOVE GOING</p>
+        </footer>
+      {{/if}}
+    </section>
+
+    <div class="receipt-actions">
+      <button id="shareButton" class="action-button" type="button">SHARE</button>
+    </div>
+
+    <p id="shareHint" class="share-hint" hidden>
+      Sharing isn't available here. Take a screenshot to save or share your receipt.
+    </p>
+
+    <section class="receipt-explainer" aria-label="Receipt legend">
+      <p>QTY  - YOUR TRACK'S RANK (MOST PLAYED = #1)</p>
+      <p>AMT  - SONG DURATION IN MM:SS</p>
+    </section>
+  </div>
+</main>
+
+<script>
+  (function () {
+    var shareButton = document.getElementById("shareButton");
+    var shareHint = document.getElementById("shareHint");
+    var title = "My Spotify Receipt";
+    var text = "Check out my Spotify top tracks receipt.";
+
+    if (!shareButton) {
+      return;
+    }
+
+    shareButton.addEventListener("click", async function () {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: title,
+            text: text,
+            url: window.location.href
+          });
+          shareHint.hidden = true;
+        } catch (error) {
+          if (error && error.name !== "AbortError") {
+            shareHint.hidden = false;
+          }
+        }
+        return;
+      }
+
+      shareHint.hidden = false;
+    });
+  })();
+</script>
