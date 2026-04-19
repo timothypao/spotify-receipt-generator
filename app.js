@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const Anthropic = require("@anthropic-ai/sdk");
 const crypto = require("crypto");
 const express = require("express");
 const session = require("express-session");
@@ -10,11 +11,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const {
+  ANTHROPIC_API_KEY,
   SPOTIFY_CLIENT_ID,
   SPOTIFY_CLIENT_SECRET,
   REDIRECT_URI,
   SESSION_SECRET
 } = process.env;
+
+const anthropic = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY }) : null;
 
 const VALID_RANGES = new Set(["short_term", "medium_term", "long_term"]);
 const missingEnvVars = [
@@ -76,6 +80,39 @@ function formatDuration(ms = 0) {
   return `${mins}:${String(secs).padStart(2, "0")}`;
 }
 
+function getRandomReceiptMessage() {
+  const messages = [
+    "KEEP THE NEEDLE MOVING",
+    "SPIN IT AGAIN SOON",
+    "YOUR SOUNDTRACK AWAITS",
+    "ANOTHER ENCORE, MAYBE",
+    "PRESS PLAY TOMORROW",
+    "MORE TRACKS, MORE MAGIC"
+  ];
+  return messages[Math.floor(Math.random() * messages.length)];
+}
+
+function buildTornEdge(isTop) {
+  const points = ["0 100%"];
+  const segments = 12;
+
+  if (!isTop) {
+    points.length = 0;
+    points.push("0 0");
+  }
+
+  for (let i = 0; i <= segments; i += 1) {
+    const x = Math.round((i / segments) * 100);
+    const yBase = isTop ? 15 : 85;
+    const variance = Math.floor(Math.random() * 28);
+    const y = isTop ? yBase + variance : yBase - variance;
+    points.push(`${x}% ${y}%`);
+  }
+
+  points.push(isTop ? "100% 100%" : "100% 0");
+  return `polygon(${points.join(", ")})`;
+}
+
 function getFontParam(value) {
   return value === "modern" ? "modern" : "classic";
 }
@@ -87,6 +124,42 @@ function normalizeTracks(items = []) {
     artists: (track.artists || []).map((artist) => artist.name).join(", "),
     duration: formatDuration(track.duration_ms)
   }));
+}
+
+async function generateCashierNote(items = []) {
+  if (!anthropic || items.length === 0) {
+    return null;
+  }
+
+  const topTracksList = items
+    .slice(0, 10)
+    .map((track) => `${track.name} - ${(track.artists || []).map((artist) => artist.name).join(", ")}`)
+    .join(", ");
+
+  try {
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 150,
+      messages: [
+        {
+          role: "user",
+          content:
+            "You are a witty cashier roasting a customer based on their music taste. " +
+            `Looking at these top 10 tracks: ${topTracksList}. ` +
+            "Write 2-3 sharp, funny sentences about what this person's music taste says about them. " +
+            "Be specific, reference actual songs/artists. No intro, just the roast."
+        }
+      ]
+    });
+
+    return (message.content || [])
+      .filter((block) => block.type === "text")
+      .map((block) => block.text)
+      .join(" ")
+      .trim() || null;
+  } catch (error) {
+    return null;
+  }
 }
 
 async function exchangeCodeForTokens(code) {
@@ -191,6 +264,10 @@ function renderReceipt(res, viewModel = {}) {
     generatedAt: buildReceiptTimestamp(),
     totalDuration: "0:00",
     itemCount: 0,
+    cashierNote: null,
+    receiptMessage: getRandomReceiptMessage(),
+    receiptTopEdge: buildTornEdge(true),
+    receiptBottomEdge: buildTornEdge(false),
     errorMessage: null,
     ...viewModel
   });
@@ -272,6 +349,7 @@ app.get("/receipt", ensureAuthenticated, async (req, res) => {
       (sum, track) => sum + (track.duration_ms || 0),
       0
     );
+    const cashierNote = await generateCashierNote(tracksResponse.items || []);
 
     renderReceipt(res, {
       tracks,
@@ -282,7 +360,11 @@ app.get("/receipt", ensureAuthenticated, async (req, res) => {
       receiptFontClass: font === "modern" ? "font-modern" : "font-classic",
       generatedAt: buildReceiptTimestamp(),
       totalDuration: formatDuration(totalDurationMs),
-      itemCount: tracks.length
+      itemCount: tracks.length,
+      cashierNote,
+      receiptMessage: getRandomReceiptMessage(),
+      receiptTopEdge: buildTornEdge(true),
+      receiptBottomEdge: buildTornEdge(false)
     });
   } catch (error) {
     if (error.code === "SESSION_EXPIRED" || error.message === "SESSION_EXPIRED") {
@@ -295,6 +377,9 @@ app.get("/receipt", ensureAuthenticated, async (req, res) => {
       length,
       font,
       receiptFontClass: font === "modern" ? "font-modern" : "font-classic",
+      receiptMessage: getRandomReceiptMessage(),
+      receiptTopEdge: buildTornEdge(true),
+      receiptBottomEdge: buildTornEdge(false),
       errorMessage:
         "We couldn't load your Spotify receipt right now. Please try again in a moment."
     });

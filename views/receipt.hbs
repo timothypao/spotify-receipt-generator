@@ -28,7 +28,22 @@
       </div>
     </section>
 
-    <section class="receipt-card receipt {{receiptFontClass}}" id="receiptCard" aria-label="Spotify top tracks receipt">
+    <section
+      class="receipt-card receipt {{receiptFontClass}}"
+      id="receiptCard"
+      aria-label="Spotify top tracks receipt"
+    >
+      <svg
+        id="clipSvg"
+        aria-hidden="true"
+        width="0"
+        height="0"
+        viewBox="0 0 0 0"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs></defs>
+      </svg>
+
       {{#if errorMessage}}
         <div class="receipt-message">
           <p>{{errorMessage}}</p>
@@ -43,15 +58,15 @@
             {{#if (eq range 'medium_term')}}LAST 6 MONTHS{{/if}}
             {{#if (eq range 'long_term')}}ALL TIME{{/if}}
           </div>
-          <div class="receipt-divider">--------------------------------</div>
+          <hr class="receipt-divider">
         </div>
 
         <div class="receipt-meta">
           <p>FOR: {{user.display_name}}</p>
-          <p>GENERATED: {{generatedAt}}</p>
+          <p>DATE: {{generatedAt}}</p>
         </div>
 
-        <div class="receipt-divider">--------------------------------</div>
+        <hr class="receipt-divider">
 
         <div class="track-row header-row">
           <span class="track-index">QTY</span>
@@ -72,14 +87,21 @@
           {{/each}}
         </ol>
 
-        <div class="receipt-divider">--------------------------------</div>
+        <hr class="receipt-divider">
 
         <footer class="receipt-footer">
           <div class="receipt-totals">
             <span>ITEM COUNT: {{itemCount}}</span>
             <span>TOTAL: {{totalDuration}}</span>
           </div>
-          <p class="closing-line">KEEP THE GROOVE GOING</p>
+          <div class="receipt-footer-stage">
+            {{#if cashierNote}}
+              <div class="cashier-note">
+                <span class="cashier-label">CASHIER NOTE:</span>
+                <p class="cashier-text">{{cashierNote}}</p>
+              </div>
+            {{/if}}
+          </div>
         </footer>
       {{/if}}
     </section>
@@ -130,4 +152,60 @@
       shareHint.hidden = false;
     });
   })();
+
+  function generateReceiptClip() {
+    var receiptCard = document.getElementById("receiptCard");
+    var clipSvg = document.getElementById("clipSvg");
+
+    if (!receiptCard || !clipSvg) {
+      return;
+    }
+
+    var defs = clipSvg.querySelector("defs");
+    var W = receiptCard.offsetWidth;
+    var H = receiptCard.offsetHeight;
+    var toothWidth = 30;
+    var toothHeightBase = 12;
+    var toothVariance = 4;
+    var teethCount = Math.max(3, Math.ceil(W / toothWidth));
+    var step = W / teethCount;
+
+    function randomDepth() {
+      return toothHeightBase + (Math.random() * toothVariance * 2 - toothVariance);
+    }
+
+    var points = [];
+    points.push("0," + H);
+    points.push("0," + randomDepth().toFixed(2));
+
+    for (var i = 0; i < teethCount; i += 1) {
+      var left = i * step;
+      var mid = left + step / 2;
+      var right = Math.min(W, left + step);
+      points.push(mid.toFixed(2) + ",0");
+      points.push(right.toFixed(2) + "," + randomDepth().toFixed(2));
+    }
+
+    points.push(W + "," + (H - randomDepth()).toFixed(2));
+
+    for (var j = teethCount - 1; j >= 0; j -= 1) {
+      var bottomRight = (j + 1) * step;
+      var bottomMid = j * step + step / 2;
+      var clampedRight = Math.min(W, bottomRight);
+      points.push(clampedRight.toFixed(2) + "," + H);
+      points.push(bottomMid.toFixed(2) + "," + (H - randomDepth()).toFixed(2));
+    }
+
+    points.push("0," + H);
+
+    defs.innerHTML =
+      '<clipPath id="receiptClip" clipPathUnits="userSpaceOnUse">' +
+      '<polygon points="' + points.join(" ") + '"></polygon>' +
+      "</clipPath>";
+
+    receiptCard.style.clipPath = "url(#receiptClip)";
+  }
+
+  generateReceiptClip();
+  window.addEventListener("resize", generateReceiptClip);
 </script>

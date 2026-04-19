@@ -246,35 +246,19 @@ button {
   position: relative;
   text-transform: uppercase;
   overflow: visible;
-  transform: rotate(-0.5deg);
+}
+
+#clipSvg {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: visible;
 }
 
 .receipt {
   background-color: #f7f3e9;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
   box-shadow: 0 4px 6px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
-}
-
-.receipt-card::before,
-.receipt-card::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 22px;
-  background-color: #f7f3e9;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
-  z-index: 1;
-}
-
-.receipt-card::before {
-  top: -21px;
-  clip-path: polygon(0 100%, 0 48%, 5% 78%, 9% 22%, 14% 88%, 19% 30%, 25% 84%, 31% 14%, 37% 90%, 44% 28%, 50% 76%, 56% 18%, 63% 88%, 70% 34%, 77% 82%, 84% 20%, 91% 86%, 96% 40%, 100% 72%, 100% 100%);
-}
-
-.receipt-card::after {
-  bottom: -21px;
-  clip-path: polygon(0 0, 0 30%, 5% 72%, 12% 10%, 18% 78%, 25% 18%, 32% 86%, 39% 26%, 46% 82%, 53% 8%, 60% 76%, 67% 22%, 74% 88%, 81% 16%, 88% 80%, 94% 24%, 100% 66%, 100% 0);
 }
 
 .font-classic {
@@ -301,12 +285,9 @@ button {
 }
 
 .receipt-divider {
-  margin: 14px 0;
-  text-align: center;
-  color: var(--muted);
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  overflow: hidden;
+  border: none;
+  border-top: 1px solid #c8c0b0;
+  margin: 12px 0;
 }
 
 .receipt-meta,
@@ -376,11 +357,26 @@ button {
   gap: 6px;
 }
 
-.closing-line {
-  margin: 16px 0 0;
-  text-align: center;
-  line-height: 1.5;
-  letter-spacing: 0.1em;
+.receipt-footer-stage {
+  min-height: 48px;
+  margin-top: 12px;
+  border-top: 1px solid rgba(200, 192, 176, 0.45);
+  border-bottom: 1px solid rgba(200, 192, 176, 0.45);
+}
+
+.cashier-note {
+  margin: 8px 0;
+}
+
+.cashier-label {
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.cashier-text {
+  font-size: 12px;
+  font-style: italic;
+  margin: 4px 0 0;
 }
 
 .inline-link {
