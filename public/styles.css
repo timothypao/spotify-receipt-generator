@@ -119,6 +119,12 @@ button {
   font-weight: 700;
 }
 
+.byline {
+  margin: 14px 0 0;
+  color: #aaaaaa;
+  font-size: 13px;
+}
+
 .toolbar {
   display: flex;
   flex-direction: column;
